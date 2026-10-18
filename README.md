@@ -207,20 +207,3 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=h2"
 | `GET` | `/api/progress/weekly` | Weekly study time & subject breakdown | None |
 
 ---
-
-## 🎯 Viva & Interview Q&A Cheatsheet
-
-### 1. What problem does FocusFlow solve?
-> FocusFlow removes the cognitive load of deciding what to study each day. By applying a weighted greedy scheduling algorithm to factors like exam urgency, topic difficulty, and subject importance, it outputs an optimal, realistic daily study roadmap tailored to the student's available hours.
-
-### 2. Why did you use a Greedy Algorithm?
-> A greedy algorithm makes the locally optimal choice at each step (highest priority score first). It operates in $O(N \log N)$ time complexity due to sorting, which is fast, deterministic, and easy to explain compared to heavy dynamic programming or search algorithms.
-
-### 3. How did you prevent Infinite JSON recursion in bidirectional JPA relationships?
-> In `Subject.java` we annotate `@JsonIgnoreProperties("subject")` on the `topics` list, and in `Topic.java` we annotate `@JsonIgnoreProperties("topics")` on the `Subject` field. This prevents Jackson from getting stuck in an infinite serialization loop between Parent and Child entities.
-
-### 4. What is CORS and how did you configure it?
-> Cross-Origin Resource Sharing (CORS) is a browser security mechanism that blocks requests made to a different origin (port 4200 to port 8080). We enabled it globally using a `WebMvcConfigurer` bean in `CorsConfig.java` allowing `http://localhost:4200` to send `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` requests.
-
-### 5. Why use Angular Standalone Components?
-> Standalone components eliminate the need for `NgModule`, making components modular, lightweight, and directly declaring their dependencies in the `imports: []` array.
