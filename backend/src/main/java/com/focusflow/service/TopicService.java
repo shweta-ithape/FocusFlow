@@ -1,0 +1,78 @@
+package com.focusflow.service;
+
+import com.focusflow.entity.Subject;
+import com.focusflow.entity.Topic;
+import com.focusflow.exception.ResourceNotFoundException;
+import com.focusflow.repository.SubjectRepository;
+import com.focusflow.repository.TopicRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * Service class handling business logic for Topic management.
+ */
+@Service
+@Transactional
+public class TopicService {
+
+    private final TopicRepository topicRepository;
+    private final SubjectRepository subjectRepository;
+
+    public TopicService(TopicRepository topicRepository, SubjectRepository subjectRepository) {
+        this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
+    }
+
+    public List<Topic> getAllTopics() {
+        return topicRepository.findAll();
+    }
+
+    public List<Topic> getTopicsBySubjectId(Long subjectId) {
+        return topicRepository.findBySubjectId(subjectId);
+    }
+
+    public Topic getTopicById(Long id) {
+        return topicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + id));
+    }
+
+    public Topic createTopic(Topic topic) {
+        if (topic.getSubject() == null || topic.getSubject().getId() == null) {
+            throw new IllegalArgumentException("A valid Subject must be selected for the topic");
+        }
+        Subject subject = subjectRepository.findById(topic.getSubject().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + topic.getSubject().getId()));
+        
+        topic.setSubject(subject);
+        return topicRepository.save(topic);
+    }
+
+    public Topic updateTopic(Long id, Topic updatedTopic) {
+        Topic existingTopic = getTopicById(id);
+        existingTopic.setName(updatedTopic.getName());
+        existingTopic.setDifficulty(updatedTopic.getDifficulty());
+        existingTopic.setEstimatedMinutes(updatedTopic.getEstimatedMinutes());
+        existingTopic.setCompleted(updatedTopic.isCompleted());
+
+        if (updatedTopic.getSubject() != null && updatedTopic.getSubject().getId() != null) {
+            Subject subject = subjectRepository.findById(updatedTopic.getSubject().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + updatedTopic.getSubject().getId()));
+            existingTopic.setSubject(subject);
+        }
+
+        return topicRepository.save(existingTopic);
+    }
+
+    public Topic toggleTopicCompletion(Long id) {
+        Topic existingTopic = getTopicById(id);
+        existingTopic.setCompleted(!existingTopic.isCompleted());
+        return topicRepository.save(existingTopic);
+    }
+
+    public void deleteTopic(Long id) {
+        Topic existingTopic = getTopicById(id);
+        topicRepository.delete(existingTopic);
+    }
+}

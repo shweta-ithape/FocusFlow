@@ -1,0 +1,78 @@
+<div class="container timer-container">
+  <!-- Page Header -->
+  <div class="page-header" style="text-align: center; margin-bottom: 28px;">
+    <h1 class="page-title">Pomodoro Focus Timer</h1>
+    <p class="page-subtitle">Boost deep concentration with 25-minute structured study blocks</p>
+  </div>
+
+  <div class="timer-card card">
+    <!-- Mode Switcher Tabs -->
+    <div class="mode-switcher">
+      <button 
+        class="mode-btn" 
+        [class.active]="currentMode === 'FOCUS'" 
+        (click)="setMode('FOCUS')">
+        🎯 25m Focus
+      </button>
+      <button 
+        class="mode-btn" 
+        [class.active]="currentMode === 'SHORT_BREAK'" 
+        (click)="setMode('SHORT_BREAK')">
+        ☕ 5m Short Break
+      </button>
+      <button 
+        class="mode-btn" 
+        [class.active]="currentMode === 'LONG_BREAK'" 
+        (click)="setMode('LONG_BREAK')">
+        🌴 15m Long Break
+      </button>
+    </div>
+
+    <!-- Clock Display Circle -->
+    <div class="clock-display-wrapper">
+      <div class="clock-circle" [class.running]="isRunning" [class.finished]="isCompleted">
+        <div class="time-text">{{ formattedTime }}</div>
+        <div class="remaining-label">Time Remaining</div>
+        <div class="mode-indicator">{{ currentMode === 'FOCUS' ? 'Deep Study Session' : 'Rest & Recharge' }}</div>
+      </div>
+    </div>
+
+    <!-- Linear Progress Bar -->
+    <div class="progress-track" style="margin: 24px 0 28px; height: 10px;">
+      <div class="progress-fill" [style.width.%]="progressPercentage"></div>
+    </div>
+
+    <!-- Completion Message Alert -->
+    <div *ngIf="isCompleted" class="alert alert-success finish-banner">
+      <span>🎉 Fantastic job! You completed this {{ currentMode === 'FOCUS' ? 'focus interval' : 'break' }}! Take a moment to stretch.</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="timer-controls">
+      <button 
+        *ngIf="!isRunning" 
+        class="btn btn-primary btn-lg" 
+        (click)="startTimer()">
+        ▶ Start Focus
+      </button>
+
+      <button 
+        *ngIf="isRunning" 
+        class="btn btn-secondary btn-lg" 
+        (click)="pauseTimer()">
+        ⏸ Pause
+      </button>
+
+      <button 
+        class="btn btn-secondary btn-lg" 
+        (click)="resetTimer()">
+        ↺ Reset
+      </button>
+    </div>
+
+    <!-- Session Streak Counter -->
+    <div class="counter-strip">
+      <span>🔥 Completed Focus Rounds Today: <strong>{{ completedPomodorosCount }}</strong></span>
+    </div>
+  </div>
+</div>

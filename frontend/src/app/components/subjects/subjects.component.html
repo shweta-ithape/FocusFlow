@@ -1,0 +1,143 @@
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Subject Management</h1>
+      <p class="page-subtitle">Configure your academic courses, exam targets, and subject priority levels</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="errorMessage = ''">Dismiss</button>
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>🎉 {{ successMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="successMessage = ''">Dismiss</button>
+  </div>
+
+  <div class="content-layout">
+    <!-- Left Column: Add / Edit Subject Form -->
+    <div class="form-container">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>{{ isEditing ? '✏️' : '➕' }}</span>
+            {{ isEditing ? 'Edit Subject' : 'Add New Subject' }}
+          </h2>
+        </div>
+
+        <form (ngSubmit)="saveSubject()">
+          <div class="form-group">
+            <label class="form-label">Subject Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="e.g. Data Structures & Algorithms" 
+              [(ngModel)]="currentSubject.name" 
+              name="subjectName" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Exam Date *</label>
+            <input 
+              type="date" 
+              class="form-control" 
+              [(ngModel)]="currentSubject.examDate" 
+              name="examDate" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Importance Level *</label>
+            <select 
+              class="form-control" 
+              [(ngModel)]="currentSubject.importance" 
+              name="importance" 
+              required>
+              <option value="LOW">Low (Weight = 1)</option>
+              <option value="MEDIUM">Medium (Weight = 2)</option>
+              <option value="HIGH">High (Weight = 3)</option>
+            </select>
+            <small class="helper-text">Higher importance awards more priority during schedule generation.</small>
+          </div>
+
+          <div class="btn-actions">
+            <button type="submit" class="btn btn-primary">
+              {{ isEditing ? 'Update Subject' : 'Create Subject' }}
+            </button>
+            <button *ngIf="isEditing" type="button" class="btn btn-secondary" (click)="cancelEdit()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: List of Subjects -->
+    <div class="list-container">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>📚</span>
+            Registered Subjects ({{ subjects.length }})
+          </h2>
+        </div>
+
+        <div *ngIf="subjects.length === 0" class="empty-state">
+          <div class="empty-icon">📖</div>
+          <h3>No subjects added yet</h3>
+          <p>Add your first subject using the form to start planning your study workflow.</p>
+        </div>
+
+        <div *ngIf="subjects.length > 0" class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Subject Name</th>
+                <th>Exam Date</th>
+                <th>Days Left</th>
+                <th>Importance</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let subject of subjects">
+                <td>
+                  <strong>{{ subject.name }}</strong>
+                </td>
+                <td>{{ subject.examDate }}</td>
+                <td>
+                  <span 
+                    class="urgency-badge" 
+                    [ngClass]="{
+                      'urgency-danger': getDaysUntilExam(subject.examDate) <= 3,
+                      'urgency-warning': getDaysUntilExam(subject.examDate) > 3 && getDaysUntilExam(subject.examDate) <= 7,
+                      'urgency-normal': getDaysUntilExam(subject.examDate) > 7
+                    }">
+                    {{ getDaysUntilExam(subject.examDate) < 0 ? 'Passed' : getDaysUntilExam(subject.examDate) + ' days' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="'badge-' + subject.importance.toLowerCase()">
+                    {{ subject.importance }}
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button class="btn btn-secondary btn-sm" (click)="startEdit(subject)" style="margin-right: 6px;">
+                    Edit
+                  </button>
+                  <button class="btn btn-danger btn-sm" (click)="deleteSubject(subject.id)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

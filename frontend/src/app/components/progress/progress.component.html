@@ -1,0 +1,103 @@
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Weekly Progress Analytics</h1>
+      <p class="page-subtitle">Track your study discipline, time investment, and subject-wise completion across the current week</p>
+    </div>
+    <button class="btn btn-secondary btn-sm" (click)="loadWeeklyProgress()">
+      🔄 Refresh Data
+    </button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="errorMessage = ''">Dismiss</button>
+  </div>
+
+  <!-- Weekly KPI Highlights -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Total Time Studied</span>
+        <div class="metric-icon-circle blue-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value">{{ weeklyData.totalCompletedMinutes }} <span class="metric-unit">mins</span></div>
+      <div class="metric-footer text-muted">
+        <span>≈ {{ (weeklyData.totalCompletedMinutes / 60) | number:'1.1-1' }} study hours logged</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Completed Sessions</span>
+        <div class="metric-icon-circle green-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value text-success">{{ weeklyData.totalCompletedSessions }}</div>
+      <div class="metric-footer text-muted">
+        <span>Completed study sessions</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Weekly Completion Rate</span>
+        <div class="metric-icon-circle purple-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value text-purple">{{ weeklyData.progressPercentage }}%</div>
+      <div class="metric-footer">
+        <div class="progress-track" style="margin-top: 6px;">
+          <div class="progress-fill" [style.width.%]="weeklyData.progressPercentage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subject-wise Breakdown Card with pure CSS Bar Chart -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <h2 class="card-title">
+        <span>📊</span>
+        Subject-wise Study Time Breakdown
+      </h2>
+    </div>
+
+    <div *ngIf="weeklyData.subjectSummaries.length === 0" class="empty-state">
+      <div class="empty-icon">📈</div>
+      <h3>No completed sessions recorded this week yet</h3>
+      <p>As you check off study sessions as completed, your subject time distribution and discipline chart will automatically appear here.</p>
+    </div>
+
+    <div *ngIf="weeklyData.subjectSummaries.length > 0" class="subject-bars-container">
+      <div *ngFor="let item of weeklyData.subjectSummaries" class="subject-bar-row">
+        <div class="subject-bar-info">
+          <span class="subject-name"><strong>{{ item.subjectName }}</strong></span>
+          <span class="subject-stats">
+            {{ item.completedMinutes }} mins ({{ item.completedSessions }} sessions)
+          </span>
+        </div>
+        <div class="bar-track">
+          <div 
+            class="bar-fill" 
+            [style.width.%]="getSubjectBarPercentage(item.completedMinutes)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,227 @@
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard Overview</h1>
+      <p class="page-subtitle">Monitor and optimize your study productivity in real-time</p>
+    </div>
+    <div class="date-badge">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      <span>{{ todayDateStr }}</span>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="errorMessage = ''">Dismiss</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>🎉 {{ successMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="successMessage = ''">Dismiss</button>
+  </div>
+
+  <!-- 4 KPI Metrics Cards (Style inspired by reference mockup) -->
+  <div class="metrics-grid">
+    <!-- Card 1: Highlighted Primary Card -->
+    <div class="metric-card metric-highlight">
+      <div class="metric-header">
+        <span class="metric-label">Planned Study Time</span>
+        <div class="metric-icon-circle white-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value">{{ stats.plannedMinutesToday }} <span class="metric-unit">mins</span></div>
+      <div class="metric-footer">
+        <span class="badge-growth">⚡ Daily Target</span>
+        <span>Based on today's limit</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Today's Sessions -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Today's Sessions</span>
+        <div class="metric-icon-circle blue-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value">{{ stats.totalSessionsToday }}</div>
+      <div class="metric-footer text-muted">
+        <span>{{ stats.pendingSessionsToday }} remaining</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Completed Sessions -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Completed Sessions</span>
+        <div class="metric-icon-circle green-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value text-success">{{ stats.completedSessionsToday }}</div>
+      <div class="metric-footer text-muted">
+        <span>Milestones achieved</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Overall Syllabus Progress -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Topic Coverage</span>
+        <div class="metric-icon-circle purple-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10h-10z"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="metric-value text-purple">{{ stats.overallProgressPercentage }}%</div>
+      <div class="metric-footer">
+        <div class="progress-track" style="margin-top: 6px;">
+          <div class="progress-fill" [style.width.%]="stats.overallProgressPercentage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column: Generator Card & Pomodoro Shortcut -->
+    <div class="dashboard-sidebar">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>⚙️</span> Smart Plan Generator
+          </h2>
+        </div>
+        <p class="section-desc">
+          Set your study availability for today. The greedy algorithm will automatically prioritize topics based on exam urgency, difficulty, and importance.
+        </p>
+
+        <form (ngSubmit)="generateSchedule()">
+          <div class="form-group">
+            <label class="form-label">Available Study Hours Today</label>
+            <div class="input-with-badge">
+              <input 
+                type="number" 
+                step="0.5" 
+                min="0.5" 
+                max="16" 
+                class="form-control" 
+                [(ngModel)]="availableHours" 
+                name="availableHours" 
+                required>
+              <span class="input-unit">Hours</span>
+            </div>
+            <small class="helper-text">= {{ (availableHours * 60) | number:'1.0-0' }} minutes total capacity</small>
+          </div>
+
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-block" 
+            [disabled]="isGenerating">
+            <span *ngIf="isGenerating">⚡ Generating Plan...</span>
+            <span *ngIf="!isGenerating">⚡ Auto-Generate Schedule</span>
+          </button>
+        </form>
+
+        <div class="quick-links">
+          <a routerLink="/pomodoro" class="quick-link-item">
+            <span>⏱️ Open Pomodoro Timer</span>
+            <span>&rarr;</span>
+          </a>
+          <a routerLink="/topics" class="quick-link-item">
+            <span>📚 Manage Study Topics</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Today's Generated Sessions -->
+    <div class="dashboard-main">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📋</span> Today's Study Sessions
+          </div>
+          <a routerLink="/schedule" class="btn btn-secondary btn-sm">Full Schedule View</a>
+        </div>
+
+        <div *ngIf="todaySessions.length === 0" class="empty-state">
+          <div class="empty-icon">📅</div>
+          <h3>No study sessions scheduled for today</h3>
+          <p>Enter your available study hours on the left and click <strong>Auto-Generate Schedule</strong> to build your prioritized study plan.</p>
+        </div>
+
+        <div *ngIf="todaySessions.length > 0" class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Topic</th>
+                <th>Subject</th>
+                <th>Planned Duration</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let session of todaySessions">
+                <td>
+                  <strong>{{ session.topic.name }}</strong>
+                  <div class="text-muted" style="font-size: 0.78rem;">
+                    Difficulty: <span class="badge" [ngClass]="'badge-' + session.topic.difficulty.toLowerCase()">{{ session.topic.difficulty }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="subject-tag">{{ session.topic.subject.name }}</span>
+                </td>
+                <td>
+                  <strong>{{ session.plannedMinutes }} mins</strong>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="'badge-' + session.status.toLowerCase()">
+                    {{ session.status }}
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button 
+                    *ngIf="session.status !== 'COMPLETED'" 
+                    class="btn btn-success btn-sm" 
+                    (click)="markSessionCompleted(session)"
+                    title="Mark Completed">
+                    ✓ Done
+                  </button>
+                  <button 
+                    *ngIf="session.status === 'COMPLETED'" 
+                    class="btn btn-secondary btn-sm" 
+                    (click)="markSessionIncomplete(session)"
+                    title="Reset to Incomplete">
+                    ↺ Undo
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

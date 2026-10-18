@@ -1,0 +1,111 @@
+/* Schedule Component Styling */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.generator-bar {
+  padding: 20px 24px;
+}
+
+.generator-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.control-actions {
+  margin-bottom: 2px;
+}
+
+.schedule-summary-strip {
+  display: flex;
+  gap: 24px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.summary-item .label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.summary-item .value {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.session-index {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.actual-time-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actual-input {
+  width: 70px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .generator-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .control-group {
+    width: 100%;
+  }
+  .control-actions .btn {
+    width: 100%;
+  }
+}

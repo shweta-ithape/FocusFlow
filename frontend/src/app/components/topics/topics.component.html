@@ -1,0 +1,180 @@
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Topic Management</h1>
+      <p class="page-subtitle">Break your subjects into actionable topics with difficulty and study estimates</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="errorMessage = ''">Dismiss</button>
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>🎉 {{ successMessage }}</span>
+    <button class="btn-sm btn-secondary" (click)="successMessage = ''">Dismiss</button>
+  </div>
+
+  <div class="content-layout">
+    <!-- Left Column: Topic Form -->
+    <div class="form-container">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>{{ isEditing ? '✏️' : '➕' }}</span>
+            {{ isEditing ? 'Edit Topic' : 'Add New Topic' }}
+          </h2>
+        </div>
+
+        <form (ngSubmit)="saveTopic()">
+          <div class="form-group">
+            <label class="form-label">Topic Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="e.g. Binary Search Trees" 
+              [(ngModel)]="currentTopic.name" 
+              name="topicName" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Parent Subject *</label>
+            <select 
+              class="form-control" 
+              [(ngModel)]="currentTopic.subjectId" 
+              name="subjectSelect" 
+              required>
+              <option [ngValue]="null" disabled>Select a subject...</option>
+              <option *ngFor="let subj of subjects" [ngValue]="subj.id">
+                {{ subj.name }} (Exam: {{ subj.examDate }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Difficulty Level *</label>
+            <select 
+              class="form-control" 
+              [(ngModel)]="currentTopic.difficulty" 
+              name="difficulty" 
+              required>
+              <option value="EASY">Easy (Weight = 1)</option>
+              <option value="MEDIUM">Medium (Weight = 2)</option>
+              <option value="HARD">Hard (Weight = 3)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Estimated Study Time (Minutes) *</label>
+            <input 
+              type="number" 
+              min="5" 
+              step="5" 
+              class="form-control" 
+              [(ngModel)]="currentTopic.estimatedMinutes" 
+              name="estimatedMinutes" 
+              required>
+          </div>
+
+          <div class="form-group checkbox-group" *ngIf="isEditing">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="currentTopic.completed" 
+                name="isCompleted">
+              <span>Mark as Completed</span>
+            </label>
+          </div>
+
+          <div class="btn-actions">
+            <button type="submit" class="btn btn-primary">
+              {{ isEditing ? 'Update Topic' : 'Create Topic' }}
+            </button>
+            <button *ngIf="isEditing" type="button" class="btn btn-secondary" (click)="cancelEdit()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Topic List with Filter -->
+    <div class="list-container">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>📝</span>
+            All Topics ({{ topics.length }})
+          </h2>
+
+          <!-- Filter Dropdown -->
+          <div class="filter-wrapper">
+            <label style="font-size: 0.8rem; font-weight: 600; margin-right: 6px;">Filter Subject:</label>
+            <select class="form-control filter-select" [(ngModel)]="selectedSubjectFilter" (change)="loadTopics()">
+              <option value="ALL">All Subjects</option>
+              <option *ngFor="let s of subjects" [value]="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div *ngIf="topics.length === 0" class="empty-state">
+          <div class="empty-icon">📑</div>
+          <h3>No topics found</h3>
+          <p>Add study topics for your subjects to feed the greedy scheduling algorithm.</p>
+        </div>
+
+        <div *ngIf="topics.length > 0" class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Done</th>
+                <th>Topic Name</th>
+                <th>Subject</th>
+                <th>Difficulty</th>
+                <th>Est. Time</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let topic of topics" [ngClass]="{ 'completed-row': topic.completed }">
+                <td>
+                  <input 
+                    type="checkbox" 
+                    [checked]="topic.completed" 
+                    (change)="toggleCompletion(topic)"
+                    class="custom-checkbox"
+                    title="Toggle topic completion">
+                </td>
+                <td>
+                  <span [style.text-decoration]="topic.completed ? 'line-through' : 'none'" [style.opacity]="topic.completed ? '0.6' : '1'">
+                    <strong>{{ topic.name }}</strong>
+                  </span>
+                </td>
+                <td>
+                  <span class="subject-tag">{{ topic.subject.name }}</span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="'badge-' + topic.difficulty.toLowerCase()">
+                    {{ topic.difficulty }}
+                  </span>
+                </td>
+                <td>{{ topic.estimatedMinutes }} mins</td>
+                <td style="text-align: right;">
+                  <button class="btn btn-secondary btn-sm" (click)="startEdit(topic)" style="margin-right: 6px;">
+                    Edit
+                  </button>
+                  <button class="btn btn-danger btn-sm" (click)="deleteTopic(topic.id)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

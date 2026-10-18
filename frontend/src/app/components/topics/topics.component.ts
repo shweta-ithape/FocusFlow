@@ -1,0 +1,189 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TopicService } from '../../services/topic.service';
+import { SubjectService } from '../../services/subject.service';
+import { Topic, Difficulty } from '../../models/topic.model';
+import { Subject } from '../../models/subject.model';
+
+@Component({
+  selector: 'app-topics',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './topics.component.html',
+  styleUrls: ['./topics.component.css']
+})
+export class TopicsComponent implements OnInit {
+  topics: Topic[] = [];
+  subjects: Subject[] = [];
+
+  selectedSubjectFilter: string = 'ALL';
+
+  // Form model
+  currentTopic: {
+    name: string;
+    subjectId: number | null;
+    difficulty: Difficulty;
+    estimatedMinutes: number;
+    completed: boolean;
+  } = {
+    name: '',
+    subjectId: null,
+    difficulty: 'MEDIUM',
+    estimatedMinutes: 60,
+    completed: false
+  };
+
+  isEditing: boolean = false;
+  editingId: number | null = null;
+  isLoading: boolean = false;
+  successMessage: string = '';
+  errorMessage: string = '';
+
+  constructor(
+    private topicService: TopicService,
+    private subjectService: SubjectService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadSubjects();
+    this.loadTopics();
+  }
+
+  loadSubjects(): void {
+    this.subjectService.getAllSubjects().subscribe({
+      next: (data) => {
+        this.subjects = data;
+        if (this.subjects.length > 0 && !this.currentTopic.subjectId) {
+          this.currentTopic.subjectId = this.subjects[0].id || null;
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load subjects', err);
+      }
+    });
+  }
+
+  loadTopics(): void {
+    this.isLoading = true;
+    const filterId = this.selectedSubjectFilter === 'ALL' ? undefined : Number(this.selectedSubjectFilter);
+
+    this.topicService.getAllTopics(filterId).subscribe({
+      next: (data) => {
+        this.topics = data;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load topics', err);
+        this.errorMessage = 'Could not load topics from backend.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  saveTopic(): void {
+    if (!this.currentTopic.name.trim()) {
+      this.errorMessage = 'Please enter a topic name.';
+      return;
+    }
+    if (!this.currentTopic.subjectId) {
+      this.errorMessage = 'Please select a subject.';
+      return;
+    }
+    if (this.currentTopic.estimatedMinutes <= 0) {
+      this.errorMessage = 'Estimated study duration must be greater than 0 minutes.';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const payload: Topic = {
+      name: this.currentTopic.name,
+      difficulty: this.currentTopic.difficulty,
+      estimatedMinutes: this.currentTopic.estimatedMinutes,
+      completed: this.currentTopic.completed,
+      subject: { id: this.currentTopic.subjectId } as Subject
+    };
+
+    if (this.isEditing && this.editingId) {
+      this.topicService.updateTopic(this.editingId, payload).subscribe({
+        next: (updated) => {
+          this.successMessage = `Topic "${updated.name}" updated successfully!`;
+          this.resetForm();
+          this.loadTopics();
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Failed to update topic.';
+        }
+      });
+    } else {
+      this.topicService.createTopic(payload).subscribe({
+        next: (created) => {
+          this.successMessage = `Topic "${created.name}" created successfully!`;
+          this.resetForm();
+          this.loadTopics();
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Failed to create topic.';
+        }
+      });
+    }
+  }
+
+  startEdit(topic: Topic): void {
+    this.isEditing = true;
+    this.editingId = topic.id || null;
+    this.currentTopic = {
+      name: topic.name,
+      subjectId: topic.subject?.id || null,
+      difficulty: topic.difficulty,
+      estimatedMinutes: topic.estimatedMinutes,
+      completed: topic.completed
+    };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.resetForm();
+  }
+
+  toggleCompletion(topic: Topic): void {
+    if (!topic.id) return;
+    this.topicService.toggleCompletion(topic.id).subscribe({
+      next: (updated) => {
+        topic.completed = updated.completed;
+      },
+      error: (err) => {
+        this.errorMessage = 'Failed to toggle topic completion.';
+      }
+    });
+  }
+
+  deleteTopic(id?: number): void {
+    if (!id) return;
+    if (confirm('Are you sure you want to delete this study topic?')) {
+      this.topicService.deleteTopic(id).subscribe({
+        next: () => {
+          this.successMessage = 'Topic deleted successfully.';
+          this.loadTopics();
+        },
+        error: (err) => {
+          this.errorMessage = 'Failed to delete topic.';
+        }
+      });
+    }
+  }
+
+  resetForm(): void {
+    this.isEditing = false;
+    this.editingId = null;
+    this.currentTopic = {
+      name: '',
+      subjectId: this.subjects.length > 0 ? (this.subjects[0].id || null) : null,
+      difficulty: 'MEDIUM',
+      estimatedMinutes: 60,
+      completed: false
+    };
+  }
+}
